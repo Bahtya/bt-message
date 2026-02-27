@@ -1,5 +1,6 @@
 #include "messageprotocol.h"
 #include <QDataStream>
+#include <QIODevice>
 
 MessageProtocol::MessageProtocol(QObject *parent)
     : QObject(parent)

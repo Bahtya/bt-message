@@ -21,7 +21,7 @@ BtClient::~BtClient()
 
 bool BtClient::isConnected() const
 {
-    return m_socket->state() == QBluetoothSocket::ConnectedState;
+    return m_socket->state() == QBluetoothSocket::SocketState::ConnectedState;
 }
 
 void BtClient::connectToDevice(const QBluetoothDeviceInfo &device, const QString &serviceUuid)
@@ -29,7 +29,7 @@ void BtClient::connectToDevice(const QBluetoothDeviceInfo &device, const QString
     if (isConnected())
         disconnect();
 
-    m_socket->connectToService(device, QBluetoothUuid(serviceUuid));
+    m_socket->connectToService(device.address(), QBluetoothUuid(serviceUuid));
 }
 
 void BtClient::disconnect()

@@ -58,6 +58,10 @@ target_link_libraries(bt-message PRIVATE
     Qt6::Network
 )
 
+target_include_directories(bt-message PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
 if(ANDROID)
     set_target_properties(bt-message PROPERTIES
         QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"

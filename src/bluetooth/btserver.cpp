@@ -1,4 +1,5 @@
 #include "btserver.h"
+#include <QBluetoothLocalDevice>
 
 BtServer::BtServer(QObject *parent)
     : QObject(parent)
@@ -29,11 +30,13 @@ void BtServer::startServer(const QString &serviceUuid)
         return;
 
     QBluetoothAddress localAddress;
-    QList<QBluetoothHostInfo> localAdapters = QBluetoothLocalDevice::allDevices();
-    if (!localAdapters.isEmpty())
-        localAddress = localAdapters.first().address();
-    else
+    QBluetoothLocalDevice localDevice;
+    if (localDevice.isValid()) {
+        localAddress = localDevice.address();
+    } else {
+        emit error(tr("No valid Bluetooth adapter found"));
         return;
+    }
 
     if (!m_server->listen(localAddress)) {
         emit error(tr("Cannot bind server"));
@@ -41,8 +44,8 @@ void BtServer::startServer(const QString &serviceUuid)
     }
 
     QBluetoothServiceInfo::Sequence classId;
-    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::SerialPort));
-    m_serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothClassIds, classId);
+    classId << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
+    m_serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classId);
 
     m_serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceName, tr("BT Message"));
     m_serviceInfo.setAttribute(QBluetoothServiceInfo::ServiceDescription,
@@ -53,7 +56,7 @@ void BtServer::startServer(const QString &serviceUuid)
 
     QBluetoothServiceInfo::Sequence profileSequence;
     QBluetoothServiceInfo::Sequence record;
-    record << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+    record << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm))
            << QVariant::fromValue(quint8(m_server->serverPort()));
     profileSequence.append(QVariant::fromValue(record));
     m_serviceInfo.setAttribute(QBluetoothServiceInfo::BluetoothProfileDescriptorList,
@@ -62,7 +65,7 @@ void BtServer::startServer(const QString &serviceUuid)
     QBluetoothServiceInfo::Sequence protocol;
     QBluetoothServiceInfo::Sequence protocolList;
     QBluetoothServiceInfo::Sequence rfcomm;
-    rfcomm << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::Rfcomm))
+    rfcomm << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ProtocolUuid::Rfcomm))
            << QVariant::fromValue(quint8(m_server->serverPort()));
     protocolList.append(QVariant::fromValue(rfcomm));
     protocol.append(QVariant::fromValue(protocolList));
