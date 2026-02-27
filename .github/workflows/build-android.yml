@@ -45,7 +45,7 @@ jobs:
         host: linux
         target: android
         arch: android_arm64_v8a
-        modules: qtbluetooth qtnetwork
+        modules: qtconnectivity
         cache: true
       id: qt-arm64
         
@@ -56,7 +56,7 @@ jobs:
         host: linux
         target: android
         arch: android_armv7
-        modules: qtbluetooth qtnetwork
+        modules: qtconnectivity
         cache: true
       id: qt-armv7
         
@@ -67,7 +67,7 @@ jobs:
         host: linux
         target: android
         arch: android_x86_64
-        modules: qtbluetooth qtnetwork
+        modules: qtconnectivity
         cache: true
       id: qt-x86_64
 
