@@ -10,6 +10,7 @@ Page {
     background: Rectangle { color: Theme.background }
     
     signal deviceSelected(string address)
+    signal openSettings()
     
     ColumnLayout {
         anchors.fill: parent
@@ -20,6 +21,8 @@ Page {
             title: qsTr("BT Message")
             subtitle: BtManager.localDeviceName || qsTr("Bluetooth Off")
             showBackButton: false
+            showSettingsButton: true
+            onSettingsClicked: root.openSettings()
         }
         
         Rectangle {

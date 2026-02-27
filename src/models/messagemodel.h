@@ -40,6 +40,8 @@ protected:
     QHash<int, QByteArray> roleNames() const override;
 
 private:
+    QString formatFileSize(qint64 bytes) const;
+
     struct MessageData {
         QString content;
         QString fileName;

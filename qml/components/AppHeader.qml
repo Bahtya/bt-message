@@ -12,8 +12,10 @@ Rectangle {
     property string title: ""
     property string subtitle: ""
     property bool showBackButton: false
+    property bool showSettingsButton: false
     
     signal backClicked()
+    signal settingsClicked()
     
     RowLayout {
         anchors.fill: parent
@@ -72,8 +74,36 @@ Rectangle {
             radius: 4
             color: BtManager.isServerRunning ? Theme.online : Theme.offline
             
-            ToolTip.visible: parent.hovered
+            ToolTip.visible: serverMouseArea.containsMouse
             ToolTip.text: BtManager.isServerRunning ? qsTr("Server running") : qsTr("Server stopped")
+            
+            MouseArea {
+                id: serverMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+            }
+        }
+        
+        Button {
+            visible: showSettingsButton
+            implicitWidth: 36
+            implicitHeight: 36
+            
+            background: Rectangle {
+                radius: Theme.radiusMedium
+                color: parent.down ? Theme.surfaceVariant : (parent.hovered ? Theme.surfaceVariant : "transparent")
+            }
+            
+            contentItem: Text {
+                text: "\u2699"
+                font.pixelSize: 20
+                color: Theme.textSecondary
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            
+            onClicked: root.settingsClicked()
         }
     }
 }

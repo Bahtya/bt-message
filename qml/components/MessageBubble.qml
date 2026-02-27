@@ -47,7 +47,7 @@ Rectangle {
             wrapMode: Text.Wrap
             font.pixelSize: Theme.fontSizeM
             font.family: messageType === 1 ? Theme.fontCode.family : Theme.fontRegular.family
-            color: isSent ? "white" : Theme.textPrimary
+            color: isSent ? Theme.sentMessageText : Theme.receivedMessageText
             Layout.fillWidth: true
         }
     }
@@ -80,7 +80,7 @@ Rectangle {
                         text: fileName
                         font: Theme.fontMedium
                         font.pixelSize: Theme.fontSizeM
-                        color: isSent ? "white" : Theme.textPrimary
+                        color: isSent ? Theme.sentMessageText : Theme.receivedMessageText
                         elide: Text.ElideRight
                         Layout.maximumWidth: 200
                     }
@@ -113,7 +113,7 @@ Rectangle {
                         width: parent.width * parent.parent.position
                         height: parent.height
                         radius: 2
-                        color: isSent ? "white" : Theme.primary
+                        color: isSent ? "#FFFFFF" : Theme.primary
                     }
                 }
             }

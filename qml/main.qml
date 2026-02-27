@@ -30,6 +30,9 @@ ApplicationWindow {
             onDeviceSelected: function(address) {
                 stackView.push(chatPage, { "deviceAddress": address })
             }
+            onOpenSettings: {
+                stackView.push(settingsPage)
+            }
         }
     }
     
@@ -37,6 +40,12 @@ ApplicationWindow {
         id: chatPage
         ChatPage {
             onBack: stackView.pop()
+        }
+    }
+    
+    Component {
+        id: settingsPage
+        SettingsPage {
         }
     }
     

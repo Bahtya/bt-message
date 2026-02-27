@@ -19,6 +19,8 @@ qt_add_executable(bt-message
     src/bluetooth/btserver.h
     src/bluetooth/btclient.cpp
     src/bluetooth/btclient.h
+    src/bluetooth/androidpermissions.cpp
+    src/bluetooth/androidpermissions.h
     src/models/devicemodel.cpp
     src/models/devicemodel.h
     src/models/messagemodel.cpp
