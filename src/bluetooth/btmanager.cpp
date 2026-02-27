@@ -9,6 +9,7 @@ BtManager::BtManager(QObject *parent)
     , m_discoveryAgent(new QBluetoothDeviceDiscoveryAgent(this))
     , m_server(new BtServer(this))
     , m_client(new BtClient(this))
+    , m_reconnectTimer(new QTimer(this))
 {
     connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &BtManager::onDeviceDiscovered);
@@ -22,6 +23,7 @@ BtManager::BtManager(QObject *parent)
     
     connect(m_client, &BtClient::connected,
             this, [this]() {
+                m_reconnectAttempts = 0;
                 m_connectionState = Connected;
                 emit connectionStateChanged();
             });
@@ -29,10 +31,15 @@ BtManager::BtManager(QObject *parent)
             this, &BtManager::onClientDisconnected);
     connect(m_client, &BtClient::dataReceived,
             this, &BtManager::onDataReceived);
+    
+    connect(m_reconnectTimer, &QTimer::timeout,
+            this, &BtManager::onReconnectTimer);
+    m_reconnectTimer->setSingleShot(true);
 }
 
 BtManager::~BtManager()
 {
+    m_autoReconnect = false;
     stopServer();
     disconnect();
 }
@@ -60,6 +67,19 @@ bool BtManager::isServerRunning() const
 BtManager::ConnectionState BtManager::connectionState() const
 {
     return m_connectionState;
+}
+
+bool BtManager::autoReconnect() const
+{
+    return m_autoReconnect;
+}
+
+void BtManager::setAutoReconnect(bool enabled)
+{
+    if (m_autoReconnect != enabled) {
+        m_autoReconnect = enabled;
+        emit autoReconnectChanged();
+    }
 }
 
 void BtManager::startDiscovery()
@@ -94,6 +114,8 @@ void BtManager::stopServer()
 
 void BtManager::connectToDevice(const QString &address)
 {
+    m_lastConnectedAddress = address;
+    m_reconnectAttempts = 0;
     m_connectionState = Connecting;
     emit connectionStateChanged();
     
@@ -117,6 +139,8 @@ void BtManager::connectToDevice(const QString &address)
 
 void BtManager::disconnect()
 {
+    m_autoReconnect = false;
+    m_reconnectTimer->stop();
     m_connectionState = Disconnecting;
     emit connectionStateChanged();
     m_client->disconnect();
@@ -134,7 +158,6 @@ void BtManager::sendMessage(const QString &message)
 
 void BtManager::sendFile(const QString &filePath)
 {
-    // TODO: Implement file transfer
     Q_UNUSED(filePath)
 }
 
@@ -161,12 +184,48 @@ void BtManager::onClientConnected(const QString &address)
 
 void BtManager::onClientDisconnected()
 {
-    m_connectionState = Disconnected;
-    emit connectionStateChanged();
+    if (m_autoReconnect && !m_lastConnectedAddress.isEmpty() && m_reconnectAttempts < m_maxReconnectAttempts) {
+        m_connectionState = Reconnecting;
+        emit connectionStateChanged();
+        attemptReconnect();
+    } else {
+        m_connectionState = Disconnected;
+        emit connectionStateChanged();
+        if (m_reconnectAttempts >= m_maxReconnectAttempts) {
+            emit error(tr("Reconnect failed after %1 attempts").arg(m_maxReconnectAttempts));
+        }
+    }
 }
 
 void BtManager::onDataReceived(const QByteArray &data)
 {
     QString message = QString::fromUtf8(data);
     emit messageReceived(message, QString());
+}
+
+void BtManager::onReconnectTimer()
+{
+    if (m_connectionState != Reconnecting) return;
+    
+    QBluetoothDeviceInfo device;
+    const QList<QBluetoothDeviceInfo> devices = m_discoveryAgent->discoveredDevices();
+    for (const auto &d : devices) {
+        if (d.address().toString() == m_lastConnectedAddress) {
+            device = d;
+            break;
+        }
+    }
+    
+    if (device.isValid()) {
+        m_client->connectToDevice(device, SERVICE_UUID);
+    } else {
+        startDiscovery();
+    }
+}
+
+void BtManager::attemptReconnect()
+{
+    m_reconnectAttempts++;
+    int delay = qMin(1000 * m_reconnectAttempts, 5000);
+    m_reconnectTimer->start(delay);
 }

@@ -31,6 +31,8 @@ qt_add_executable(bt-message
     src/models/messagestore.h
     src/protocol/messageprotocol.cpp
     src/protocol/messageprotocol.h
+    src/protocol/filetransfermanager.cpp
+    src/protocol/filetransfermanager.h
 )
 
 qt_add_qml_module(bt-message

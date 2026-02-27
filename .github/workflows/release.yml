@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  QT_VERSION: '6.6.0'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: windows
+        target: desktop
+        arch: win64_msvc2019_64
+        modules: qtbluetooth qtnetwork
+        cache: true
+        
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      
+    - name: Configure CMake
+      run: |
+        cmake -B build -G "Visual Studio 17 2022" -A x64 `
+          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" `
+          -DCMAKE_BUILD_TYPE=Release
+          
+    - name: Build
+      run: cmake --build build --config Release --parallel
+      
+    - name: Deploy Qt libraries
+      run: |
+        cd build/Release
+        windeployqt bt-message.exe --release --no-translations
+        
+    - name: Create ZIP archive
+      run: |
+        cd build/Release
+        7z a -tzip ${{ github.workspace }}/bt-message-windows.zip *
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bt-message-windows
+        path: bt-message-windows.zip
+
+  build-android:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install Android SDK components
+      run: |
+        sdkmanager "platforms;android-33"
+        sdkmanager "build-tools;33.0.1"
+        sdkmanager "ndk;25.1.8937393"
+        
+    - name: Install Qt (Android)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: linux
+        target: android
+        arch: android_arm64_v8a
+        modules: qtbluetooth qtnetwork
+        cache: true
+      id: qt-android
+
+    - name: Configure CMake
+      env:
+        ANDROID_NDK_ROOT: ${{ github.workspace }}/android-sdk/ndk/25.1.8937393
+        ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.qt-android.outputs.qtPath }}/lib/cmake/Qt6/qt.toolchain.cmake \
+          -DANDROID_SDK_ROOT=${ANDROID_SDK_ROOT} \
+          -DANDROID_NDK_ROOT=${ANDROID_NDK_ROOT} \
+          -DANDROID_ABI=arm64-v8a \
+          -DCMAKE_BUILD_TYPE=Release
+          
+    - name: Build APK
+      run: |
+        cmake --build build --parallel
+        cd build
+        cmake --build . --target apk_release
+        
+    - name: Rename APK
+      run: |
+        mv build/android-build/build/outputs/apk/release/android-build-release-unsigned.apk bt-message-android.apk || true
+        mv build/android-build/build/outputs/apk/release/*.apk bt-message-android.apk || true
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bt-message-android
+        path: bt-message-android.apk
+
+  release:
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Download Windows artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: bt-message-windows
+        path: artifacts
+        
+    - name: Download Android artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: bt-message-android
+        path: artifacts
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/bt-message-windows.zip
+          artifacts/bt-message-android.apk
+        generate_release_notes: true
+        draft: false
+        prerelease: false

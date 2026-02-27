@@ -1,0 +1,100 @@
+name: Build Android
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  QT_VERSION: '6.6.0'
+  ANDROID_NDK_VERSION: '25.1.8937393'
+  ANDROID_BUILD_TOOLS_VERSION: '33.0.1'
+  ANDROID_PLATFORM_VERSION: 'android-33'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install Android SDK components
+      run: |
+        sdkmanager "platforms;$ANDROID_PLATFORM_VERSION"
+        sdkmanager "build-tools;$ANDROID_BUILD_TOOLS_VERSION"
+        sdkmanager "ndk;$ANDROID_NDK_VERSION"
+        
+    - name: Install Qt (Android arm64)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: linux
+        target: android
+        arch: android_arm64_v8a
+        modules: qtbluetooth qtnetwork
+        cache: true
+      id: qt-arm64
+        
+    - name: Install Qt (Android armv7)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: linux
+        target: android
+        arch: android_armv7
+        modules: qtbluetooth qtnetwork
+        cache: true
+      id: qt-armv7
+        
+    - name: Install Qt (Android x86_64)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: linux
+        target: android
+        arch: android_x86_64
+        modules: qtbluetooth qtnetwork
+        cache: true
+      id: qt-x86_64
+
+    - name: Configure CMake
+      env:
+        ANDROID_NDK_ROOT: ${{ github.workspace }}/android-sdk/ndk/${{ env.ANDROID_NDK_VERSION }}
+        ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_TOOLCHAIN_FILE=${{ steps.qt-arm64.outputs.qtPath }}/lib/cmake/Qt6/qt.toolchain.cmake \
+          -DANDROID_SDK_ROOT=${ANDROID_SDK_ROOT} \
+          -DANDROID_NDK_ROOT=${ANDROID_NDK_ROOT} \
+          -DANDROID_ABI=arm64-v8a \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DQT_HOST_PATH=${{ steps.qt-arm64.outputs.qtPath }}/../gcc_64
+          
+    - name: Build
+      run: cmake --build build --parallel
+      
+    - name: Build APK
+      run: |
+        cd build
+        cmake --build . --target apk_release
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: bt-message-android
+        path: build/android-build/build/outputs/apk/release/*.apk
+        retention-days: 30
