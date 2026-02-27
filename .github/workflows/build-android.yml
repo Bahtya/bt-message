@@ -38,6 +38,20 @@ jobs:
         sdkmanager "build-tools;$ANDROID_BUILD_TOOLS_VERSION"
         sdkmanager "ndk;$ANDROID_NDK_VERSION"
         
+    - name: Install build tools
+      run: sudo apt-get install -y ninja-build
+        
+    - name: Install Qt (Desktop)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: linux
+        target: desktop
+        arch: gcc_64
+        modules: qtconnectivity
+        cache: true
+      id: qt-desktop
+        
     - name: Install Qt (Android arm64)
       uses: jurplel/install-qt-action@v4
       with:
@@ -48,33 +62,13 @@ jobs:
         modules: qtconnectivity
         cache: true
       id: qt-arm64
-        
-    - name: Install Qt (Android armv7)
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: ${{ env.QT_VERSION }}
-        host: linux
-        target: android
-        arch: android_armv7
-        modules: qtconnectivity
-        cache: true
-      id: qt-armv7
-        
-    - name: Install Qt (Android x86_64)
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: ${{ env.QT_VERSION }}
-        host: linux
-        target: android
-        arch: android_x86_64
-        modules: qtconnectivity
-        cache: true
-      id: qt-x86_64
 
     - name: Configure CMake
       env:
         ANDROID_NDK_ROOT: ${{ github.workspace }}/android-sdk/ndk/${{ env.ANDROID_NDK_VERSION }}
         ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+        QT_HOST_PATH: ${{ steps.qt-desktop.outputs.qtPath }}
+        Qt6_DIR: ${{ steps.qt-arm64.outputs.qtPath }}/lib/cmake/Qt6
       run: |
         cmake -B build -G Ninja \
           -DCMAKE_TOOLCHAIN_FILE=${{ steps.qt-arm64.outputs.qtPath }}/lib/cmake/Qt6/qt.toolchain.cmake \
@@ -82,7 +76,7 @@ jobs:
           -DANDROID_NDK_ROOT=${ANDROID_NDK_ROOT} \
           -DANDROID_ABI=arm64-v8a \
           -DCMAKE_BUILD_TYPE=Release \
-          -DQT_HOST_PATH=${{ steps.qt-arm64.outputs.qtPath }}/../gcc_64
+          -DQT_HOST_PATH=${QT_HOST_PATH}
           
     - name: Build
       run: cmake --build build --parallel
