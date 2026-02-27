@@ -27,6 +27,8 @@ qt_add_executable(bt-message
     src/models/messagemodel.h
     src/models/filetransfermodel.cpp
     src/models/filetransfermodel.h
+    src/models/messagestore.cpp
+    src/models/messagestore.h
     src/protocol/messageprotocol.cpp
     src/protocol/messageprotocol.h
 )

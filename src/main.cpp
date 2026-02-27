@@ -7,6 +7,7 @@
 #include "models/devicemodel.h"
 #include "models/messagemodel.h"
 #include "models/filetransfermodel.h"
+#include "models/messagestore.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,11 +22,13 @@ int main(int argc, char *argv[])
     DeviceModel deviceModel;
     MessageModel messageModel;
     FileTransferModel fileTransferModel;
+    MessageStore messageStore;
 
     engine.rootContext()->setContextProperty("BtManager", &btManager);
     engine.rootContext()->setContextProperty("DeviceModel", &deviceModel);
     engine.rootContext()->setContextProperty("MessageModel", &messageModel);
     engine.rootContext()->setContextProperty("FileTransferModel", &fileTransferModel);
+    engine.rootContext()->setContextProperty("MessageStore", &messageStore);
 
     const QUrl url(u"qrc:/BtMessage/qml/main.qml"_qs);
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
