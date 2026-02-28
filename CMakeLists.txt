@@ -78,7 +78,9 @@ if(WIN32)
     )
 endif()
 
-install(TARGETS bt-message
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION bin
-)
+if(NOT ANDROID)
+    install(TARGETS bt-message
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION bin
+    )
+endif()
