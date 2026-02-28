@@ -9,15 +9,6 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Bluetooth Network)
 
-if(ANDROID)
-    qt_policy(SET QTP0001 NEW)
-    qt_policy(SET QTP0002 NEW)
-    set_target_properties(bt-message PROPERTIES
-        QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
-        QT_ANDROID_BUILD_GRADLE_BUILD_TYPE_RELEASE "release"
-    )
-endif()
-
 qt_add_executable(bt-message
     src/main.cpp
     src/bluetooth/btmanager.cpp
@@ -74,6 +65,14 @@ target_include_directories(bt-message PRIVATE
 if(WIN32)
     set_target_properties(bt-message PROPERTIES
         WIN32_EXECUTABLE TRUE
+    )
+endif()
+
+if(ANDROID)
+    qt_policy(SET QTP0001 NEW)
+    qt_policy(SET QTP0002 NEW)
+    set_target_properties(bt-message PROPERTIES
+        QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
     )
 endif()
 
