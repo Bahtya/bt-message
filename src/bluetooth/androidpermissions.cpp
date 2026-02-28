@@ -3,7 +3,6 @@
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
 #include <QCoreApplication>
-#include <QNativeInterface>
 #endif
 
 AndroidPermissions::AndroidPermissions(QObject *parent)
@@ -30,7 +29,10 @@ bool AndroidPermissions::storageGranted() const
 void AndroidPermissions::requestBluetoothPermissions()
 {
 #ifdef Q_OS_ANDROID
-    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;");
     if (activity.isValid()) {
         activity.callMethod<void>("requestBluetoothPermissions");
     }
@@ -43,7 +45,10 @@ void AndroidPermissions::requestBluetoothPermissions()
 void AndroidPermissions::requestLocationPermission()
 {
 #ifdef Q_OS_ANDROID
-    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;");
     if (activity.isValid()) {
         activity.callMethod<void>("requestLocationPermission");
     }
@@ -56,7 +61,10 @@ void AndroidPermissions::requestLocationPermission()
 void AndroidPermissions::requestStoragePermissions()
 {
 #ifdef Q_OS_ANDROID
-    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;");
     if (activity.isValid()) {
         activity.callMethod<void>("requestStoragePermissions");
     }
@@ -86,7 +94,10 @@ void AndroidPermissions::requestAllPermissions()
 void AndroidPermissions::checkPermissions()
 {
 #ifdef Q_OS_ANDROID
-    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;");
     if (activity.isValid()) {
         m_bluetoothGranted = activity.callMethod<jboolean>("hasBluetoothPermissions");
         m_locationGranted = activity.callMethod<jboolean>("hasLocationPermission");
