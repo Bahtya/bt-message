@@ -1,9 +1,9 @@
 #include "androidpermissions.h"
 
 #ifdef Q_OS_ANDROID
-#include <QAndroidApplication>
 #include <QJniObject>
-#include <QtCore/QCoreApplication>
+#include <QCoreApplication>
+#include <QNativeInterface>
 #endif
 
 AndroidPermissions::AndroidPermissions(QObject *parent)
@@ -30,7 +30,7 @@ bool AndroidPermissions::storageGranted() const
 void AndroidPermissions::requestBluetoothPermissions()
 {
 #ifdef Q_OS_ANDROID
-    QJniObject activity = QJniObject(QAndroidApplication::context());
+    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
     if (activity.isValid()) {
         activity.callMethod<void>("requestBluetoothPermissions");
     }
@@ -43,7 +43,7 @@ void AndroidPermissions::requestBluetoothPermissions()
 void AndroidPermissions::requestLocationPermission()
 {
 #ifdef Q_OS_ANDROID
-    QJniObject activity = QJniObject(QAndroidApplication::context());
+    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
     if (activity.isValid()) {
         activity.callMethod<void>("requestLocationPermission");
     }
@@ -56,7 +56,7 @@ void AndroidPermissions::requestLocationPermission()
 void AndroidPermissions::requestStoragePermissions()
 {
 #ifdef Q_OS_ANDROID
-    QJniObject activity = QJniObject(QAndroidApplication::context());
+    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
     if (activity.isValid()) {
         activity.callMethod<void>("requestStoragePermissions");
     }
@@ -86,7 +86,7 @@ void AndroidPermissions::requestAllPermissions()
 void AndroidPermissions::checkPermissions()
 {
 #ifdef Q_OS_ANDROID
-    QJniObject activity = QJniObject(QAndroidApplication::context());
+    auto activity = QJniObject(QNativeInterface::QAndroidApplication::context());
     if (activity.isValid()) {
         m_bluetoothGranted = activity.callMethod<jboolean>("hasBluetoothPermissions");
         m_locationGranted = activity.callMethod<jboolean>("hasLocationPermission");
