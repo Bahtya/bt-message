@@ -9,6 +9,10 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Bluetooth Network)
 
+if(ANDROID)
+    qt_policy(SET QTP0002 NEW)
+endif()
+
 qt_add_executable(bt-message
     src/main.cpp
     src/bluetooth/btmanager.cpp
