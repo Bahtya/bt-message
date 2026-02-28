@@ -10,6 +10,7 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Quick Bluetooth Network)
 
 if(ANDROID)
+    qt_policy(SET QTP0001 NEW)
     qt_policy(SET QTP0002 NEW)
     set_target_properties(bt-message PROPERTIES
         QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
