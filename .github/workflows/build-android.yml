@@ -33,7 +33,7 @@ jobs:
       run: |
         sdkmanager "platforms;android-33"
         sdkmanager "build-tools;33.0.1"
-        sdkmanager "ndk;25.1.8937393"
+        sdkmanager "ndk;25.2.9519653"
         
     - name: Install build tools
       run: sudo apt-get install -y ninja-build
